@@ -9,6 +9,10 @@ export const initMongoConnection = async () => {
     const url = getEnvVar('MONGODB_URL');
     const db = getEnvVar('MONGODB_DB');
 
+    console.log(
+      'Connecting to MongoDB with URI:',
+      `mongodb+srv://${user}:<hidden>@${url}/${db}`,
+    );
     await mongoose.connect(
       `mongodb+srv://${user}:${pwd}@${url}/${db}?retryWrites=true&w=majority&appName=hw2`,
     );
