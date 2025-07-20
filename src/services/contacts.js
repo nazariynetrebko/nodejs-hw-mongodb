@@ -11,18 +11,17 @@ export const getAllContacts = async ({
   const limit = perPage;
   const skip = (page - 1) * perPage;
 
-  const contactsQuery = ContactsCollection.find();
-  const contactsCount = await ContactsCollection.find()
-    .merge(contactsQuery)
-    .countDocuments();
+  const contactsQuery = ContactsCollection.find(filter);
+  const contactsCount = await ContactsCollection.countDocuments(filter);
 
   const contacts = await contactsQuery
     .skip(skip)
     .limit(limit)
-    .sort({ [sortBy]: sortOrder })
+    .sort({ [sortBy]: sortOrder === SORT_ORDER.ASC ? 1 : -1 })
     .exec();
 
   const paginationData = calculatePaginationData(contactsCount, perPage, page);
+
   return {
     data: contacts,
     ...paginationData,
@@ -48,9 +47,7 @@ export const deleteContact = async (contactId) => {
 
 export const updateContact = async (contactId, payload, options = {}) => {
   const rawResult = await ContactsCollection.findByIdAndUpdate(
-    {
-      _id: contactId,
-    },
+    contactId,
     payload,
     {
       new: true,
@@ -61,7 +58,7 @@ export const updateContact = async (contactId, payload, options = {}) => {
   if (!rawResult || !rawResult.value) return null;
 
   return {
-    student: rawResult.value,
+    contact: rawResult.value,
     isNew: Boolean(rawResult?.lastErrorObject?.upserted),
   };
 };
