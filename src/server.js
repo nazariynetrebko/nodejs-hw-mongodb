@@ -6,6 +6,8 @@ import contactsRouter from './routers/contacts.js';
 import { getEnvVar } from './utils/getEnvVar.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFoundHandler } from './middlewares/notFoundHandler.js';
+import authRouter from './routers/auth.js';
+import cookieParser from 'cookie-parser';
 
 const PORT = Number(getEnvVar('PORT', '3000'));
 
@@ -15,6 +17,7 @@ export const setupServer = () => {
 
   app.use(express.json());
   app.use(cors());
+  app.use(cookieParser());
 
   app.use((req, res, next) => {
     logger.info({ method: req.method, url: req.url }, 'Incoming request');
@@ -27,7 +30,8 @@ export const setupServer = () => {
     });
   });
 
-  app.use(contactsRouter);
+  app.use('/auth', authRouter);
+  app.use('/contacts', contactsRouter);
 
   app.get('/hw02', (req, res) => {
     res.json({ message: 'HW2 endpoint' });
@@ -37,6 +41,7 @@ export const setupServer = () => {
 
   app.use(errorHandler);
 
+  app.use(contactsRouter);
   return app.listen(PORT, () => {
     console.log(`Server is running on ${PORT}`);
   });
