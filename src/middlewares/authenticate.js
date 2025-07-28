@@ -12,17 +12,14 @@ export const authenticate = async (req, res, next) => {
   }
 
   try {
-    // Перевірити чи токен валідний і не протермінований
     const session = await SessionCollection.findOne({ accessToken: token });
 
     if (!session || session.accessTokenValidUntil < new Date()) {
       return next(createHttpError(401, 'Access token expired'));
     }
 
-    // Додати перевірку підпису токена
     jwt.verify(token, process.env.JWT_SECRET);
 
-    // Додати користувача до запиту
     req.user = { _id: session.userId };
     next();
   } catch (error) {

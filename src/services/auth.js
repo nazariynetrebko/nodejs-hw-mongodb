@@ -25,7 +25,7 @@ export class AuthService {
     if (!user || !(await bcrypt.compare(password, user.password))) {
       throw createHttpError(401, 'Email or password is wrong');
     }
-    // видаляємо старі сесії
+
     await SessionCollection.deleteMany({ userId: user._id });
 
     const accessToken = jwt.sign({ sub: user._id }, JWT_SECRET, {
@@ -57,17 +57,17 @@ export class AuthService {
     } catch {
       throw createHttpError(401, 'Invalid refresh token');
     }
-    // знаходимо стару сесію
+
     const session = await SessionCollection.findOne({
       refreshToken: oldRefreshToken,
     });
     if (!session) {
       throw createHttpError(401, 'Session not found');
     }
-    // видаляємо стару
+
     await SessionCollection.deleteOne({ _id: session._id });
 
-    // генеруємо нові токени
+    
     const accessToken = jwt.sign({ sub: payload.sub }, JWT_SECRET, {
       expiresIn: ACCESS_EXP,
     });
