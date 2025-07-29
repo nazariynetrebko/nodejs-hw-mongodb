@@ -60,7 +60,7 @@ export const updateContact = async (
   userId,
   options = {},
 ) => {
-  const rawResult = await ContactsCollection.findByIdAndUpdate(
+  const rawResult = await ContactsCollection.findOneAndUpdate(
     {
       _id: contactId,
       userId,
