@@ -4,9 +4,23 @@ import createHttpError from 'http-errors';
 import { UsersCollection } from '../db/models/user.js';
 import { SessionCollection } from '../db/models/session.js';
 
+import { sendEmail } from '../utils/emailSender.js';
+import { SMTP } from '../constants/index.js';
+import { getEnvVar } from '../utils/getEnvVar.js';
+
+import handlebars from 'handlebars';
+import fs from 'fs/promises';
+import path from 'path';
+import { TEMPLATES_DIR } from '../constants/index.js';
+import { create } from 'domain';
+import { createHash } from 'crypto';
+
 const JWT_SECRET = process.env.JWT_SECRET;
 const ACCESS_EXP = '15m';
 const REFRESH_EXP = '30d';
+
+const RESET_EXP = process.env.RESET_TOKEN_EXP;
+const APP_DOMAIN = process.env.APP_DOMAIN;
 
 export class AuthService {
   static async register({ name, email, password }) {
@@ -67,7 +81,6 @@ export class AuthService {
 
     await SessionCollection.deleteOne({ _id: session._id });
 
-    
     const accessToken = jwt.sign({ sub: payload.sub }, JWT_SECRET, {
       expiresIn: ACCESS_EXP,
     });
@@ -89,5 +102,60 @@ export class AuthService {
 
   static async logout(refreshToken) {
     await SessionCollection.deleteOne({ refreshToken });
+  }
+
+  static async requestResetToken(email) {
+    const user = await UsersCollection.findOne({ email });
+    if (!user) {
+      throw createHttpError(404, 'User not found');
+    }
+
+    const resetToken = jwt.sign({ sub: user._id, email }, JWT_SECRET, {
+      expiresIn: RESET_EXP || '15m',
+    });
+
+    const resetPasswordTemplatePath = path.join(
+      TEMPLATES_DIR,
+      'reset-password-email.html',
+    );
+    const templateSource = (
+      await fs.readFile(resetPasswordTemplatePath)
+    ).toString();
+
+    const template = handlebars.compile(templateSource);
+    const html = template({
+      name: user.name,
+      link: `${getEnvVar('APP_DOMAIN')}/reset-password?token=${resetToken}`,
+    });
+
+    await sendEmail({
+      from: getEnvVar(SMTP.SMTP_FROM),
+      to: email,
+      subject: 'Reset your password',
+      html: html,
+    });
+  }
+  static async resetPassword(payload) {
+    let entries;
+
+    try {
+      entries = jwt.verify(payload.token, getEnvVar('JWT_SECRET'));
+    } catch (err) {
+      if (err instanceof Error) throw createHttpError(401, err.message);
+      throw err;
+    }
+    const user = await UsersCollection.findOne({
+      email: entries.email,
+      _id: entries.sub,
+    });
+    if (!user) {
+      throw createHttpError(404, 'User not found');
+    }
+
+    const encryptedPassword = await bcrypt.hash(payload.password, 10);
+    await UsersCollection.updateOne(
+      { _id: user._id },
+      { password: encryptedPassword },
+    );
   }
 }

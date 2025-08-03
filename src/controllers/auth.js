@@ -1,4 +1,5 @@
-import { AuthService } from '../services/auth.js';
+import { AuthService, requestResetToken } from '../services/auth.js';
+import { resetPassword } from '../services/auth.js';
 import createHttpError from 'http-errors';
 
 export const register = async (req, res) => {
@@ -49,4 +50,22 @@ export const logout = async (req, res) => {
   await AuthService.logout(req.cookies.refreshToken);
   res.clearCookie('refreshToken');
   res.sendStatus(204);
+};
+
+export const requestResetEmailController = async (req, res) => {
+  await requestResetToken(req.body.email);
+  res.json({
+    message: 'Reset password email was successfully sent!',
+    status: 200,
+    data: {},
+  });
+};
+
+export const resetPasswordController = async (req, res) => {
+  await resetPassword(req.body);
+  res.json({
+    message: 'Password was successfully reset!',
+    status: 200,
+    data: {},
+  });
 };
