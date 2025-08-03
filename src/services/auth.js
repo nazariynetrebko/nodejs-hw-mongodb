@@ -111,7 +111,7 @@ export class AuthService {
     }
 
     const resetToken = jwt.sign({ sub: user._id, email }, JWT_SECRET, {
-      expiresIn: RESET_EXP || '15m',
+      expiresIn: RESET_EXP,
     });
 
     const resetPasswordTemplatePath = path.join(
@@ -128,12 +128,19 @@ export class AuthService {
       link: `${getEnvVar('APP_DOMAIN')}/reset-password?token=${resetToken}`,
     });
 
-    await sendEmail({
-      from: getEnvVar(SMTP.SMTP_FROM),
-      to: email,
-      subject: 'Reset your password',
-      html: html,
-    });
+    try {
+      await sendEmail({
+        from: getEnvVar(SMTP.SMTP_FROM),
+        to: email,
+        subject: 'Reset your password',
+        html,
+      });
+    } catch (err) {
+      throw createHttpError(
+        500,
+        'Failed to send the email, please try again later.',
+      );
+    }
   }
   static async resetPassword(payload) {
     let entries;
