@@ -1,5 +1,4 @@
-import { AuthService, requestResetToken } from '../services/auth.js';
-import { resetPassword } from '../services/auth.js';
+import { AuthService } from '../services/auth.js';
 import createHttpError from 'http-errors';
 
 export const register = async (req, res, next) => {

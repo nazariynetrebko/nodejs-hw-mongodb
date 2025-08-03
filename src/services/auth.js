@@ -12,15 +12,18 @@ import handlebars from 'handlebars';
 import fs from 'fs/promises';
 import path from 'path';
 import { TEMPLATES_DIR } from '../constants/index.js';
-import { create } from 'domain';
-import { createHash } from 'crypto';
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = getEnvVar('JWT_SECRET');
 const ACCESS_EXP = '15m';
 const REFRESH_EXP = '30d';
+const RESET_EXP = getEnvVar('RESET_TOKEN_EXP', '5m');
 
-const RESET_EXP = process.env.RESET_TOKEN_EXP;
-const APP_DOMAIN = process.env.APP_DOMAIN;
+// const JWT_SECRET = process.env.JWT_SECRET;
+// const ACCESS_EXP = '15m';
+// const REFRESH_EXP = '30d';
+
+// const RESET_EXP = process.env.RESET_TOKEN_EXP;
+// const APP_DOMAIN = process.env.APP_DOMAIN;
 
 export class AuthService {
   static async register({ name, email, password }) {
