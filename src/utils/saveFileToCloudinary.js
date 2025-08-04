@@ -11,7 +11,12 @@ cloudinary.v2.config({
 });
 
 export const SaveFileToCloudinary = async (file) => {
-  const response = await cloudinary.v2.uploader.upload(file.path);
-  await fs.unlink(file.path);
-  return response.secure_url;
+  try {
+    const response = await cloudinary.v2.uploader.upload(file.path);
+    await fs.unlink(file.path);
+    return response.secure_url;
+  } catch (error) {
+    console.error('Cloudinary upload error:', error);
+    throw new Error('Failed to upload image to Cloudinary');
+  }
 };

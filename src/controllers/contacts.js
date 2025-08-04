@@ -13,6 +13,7 @@ import { UsersCollection } from '../db/models/user.js';
 import { saveFileToUploadDir } from '../utils/saveFileToUploadDir.js';
 import { getEnvVar } from '../utils/getEnvVar.js';
 import { SaveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
+import { AuthService } from '../services/auth.js';
 
 export const getContacts = async (req, res, next) => {
   try {
@@ -61,6 +62,11 @@ export const getContact = async (req, res, next) => {
 export const createContactController = async (req, res) => {
   const payload = { ...req.body, userId: req.user._id };
   const contact = await createContact(payload);
+
+  if (req.file) {
+    const cloudUrl = await SaveFileToCloudinary(req.file);
+    payload.photo = cloudUrl;
+  }
 
   res.status(201).json({
     status: 201,
@@ -123,5 +129,12 @@ export const patchContactController = async (req, res, next) => {
     status: 200,
     message: 'Successfully updated contact!',
     data: result.contact,
+  });
+};
+
+export const requestResetEmailController = async (req, res) => {
+  await AuthService.requestResetToken(req.body.email);
+  res.status(200).json({
+    message: 'Reset password email sent successfully',
   });
 };

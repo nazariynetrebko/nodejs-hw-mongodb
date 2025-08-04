@@ -23,7 +23,7 @@ router.post('/login', validateBody(loginSchema), login);
 router.post('/refresh', refresh);
 router.post('/logout', logout);
 router.post(
-  '/request-reset-email',
+  '/send-reset-email',
   validateBody(requestResetEmailSchema),
   ctrlWrapper(requestResetEmailController),
 );
