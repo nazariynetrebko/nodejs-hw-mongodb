@@ -16,7 +16,7 @@ export const refreshSchema = Joi.object({
 });
 
 export const requestResetEmailSchema = Joi.object({
-  email: Joi.string().email().required(),
+  email: Joi.string().email().trim().required(),
 });
 
 export const resetPasswordSchema = Joi.object({

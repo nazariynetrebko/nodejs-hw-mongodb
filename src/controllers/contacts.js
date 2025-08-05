@@ -60,19 +60,23 @@ export const getContact = async (req, res, next) => {
 };
 
 export const createContactController = async (req, res) => {
-  const payload = { ...req.body, userId: req.user._id };
-  const contact = await createContact(payload);
+  try {
+    const payload = { ...req.body, userId: req.user._id };
 
-  if (req.file) {
-    const cloudUrl = await SaveFileToCloudinary(req.file);
-    payload.photo = cloudUrl;
+    if (req.file) {
+      payload.photo = await SaveFileToCloudinary(req.file);
+    }
+
+    const contact = await createContact(payload);
+
+    res.status(201).json({
+      status: 201,
+      message: 'Successfully created a contact!',
+      data: contact,
+    });
+  } catch (error) {
+    next(error);
   }
-
-  res.status(201).json({
-    status: 201,
-    message: 'Successfully created a contact!',
-    data: contact,
-  });
 };
 
 export const deleteContactController = async (req, res, next) => {
@@ -105,31 +109,37 @@ export const upsertContactController = async (req, res) => {
 };
 
 export const patchContactController = async (req, res, next) => {
-  const { contactId } = req.params;
-  const photo = req.file;
+  try {
+    const { contactId } = req.params;
+    let photoUrl;
 
-  let photoUrl;
-  if (photo) {
-    if (getEnvVar('ENABLE_CLOUDINARY' === 'true')) {
-      photoUrl = await saveFileToUploadDir(photo);
-    } else {
-      photoUrl = await saveFileToUploadDir(photo);
+    if (req.file) {
+      const useCloud = getEnvVar('ENABLE_CLOUDINARY') === 'true';
+      if (useCloud) {
+        photoUrl = await SaveFileToCloudinary(req.file);
+      } else {
+        photoUrl = await saveFileToUploadDir(req.file);
+      }
     }
-  }
-  const result = await updateContact(contactId, {
-    ...req.body,
-    photo: photoUrl,
-  });
-  if (!result) {
-    next(createHttpError(404, 'Contact not Found'));
-    return;
-  }
 
-  res.json({
-    status: 200,
-    message: 'Successfully updated contact!',
-    data: result.contact,
-  });
+    const result = await updateContact(
+      contactId,
+      { ...req.body, ...(photoUrl && { photo: photoUrl }) },
+      req.user._id,
+    );
+
+    if (!result) {
+      throw createHttpError(404, 'Contact not found');
+    }
+
+    res.json({
+      status: 200,
+      message: 'Successfully updated contact!',
+      data: result.contact,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const requestResetEmailController = async (req, res) => {
