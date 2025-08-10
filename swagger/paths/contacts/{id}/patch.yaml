@@ -1,0 +1,110 @@
+# swagger/paths/contacts/{id}/patch.yaml
+tags:
+  - Contacts
+summary: Update a contact partially
+operationId: patchContact
+description: 'Partially updates a contact by its ID. You can update one or more fields.'
+security:
+  - bearerAuth: []
+parameters:
+  - name: id
+    in: path
+    description: ID of the contact to update
+    required: true
+    schema:
+      type: string
+      example: '65ca67e7ae7f10c88b598384'
+requestBody:
+  content:
+    multipart/form-data: # Використовуємо multipart/form-data через photo (файл)
+      schema:
+        type: object
+        properties:
+          name:
+            description: "Student's name"
+            type: string
+            example: 'John Doe Updated'
+            minLength: 3
+            maxLength: 20
+          phoneNumber:
+            description: "Contact's phone number"
+            type: string
+            example: '+380965674566'
+            minLength: 3
+            maxLength: 20
+          email:
+            description: "Contact's email"
+            type: string
+            format: email
+            example: 'updated.email@example.com'
+          isFavourite:
+            description: 'A value that indicates whether the contact is in favorites.'
+            type: boolean
+            example: true
+          contactType:
+            description: 'Describes the type of contact'
+            type: string
+            enum:
+              - work
+              - home
+              - personal
+            example: 'work'
+          photo:
+            description: "Contact's photo (optional)"
+            type: string
+            format: binary
+responses:
+  '200':
+    description: Contact successfully updated.
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 200
+            message:
+              type: string
+              example: Successfully updated contact!
+            data:
+              type: object
+              $ref: '../../../components/schemas/Contact.yaml'
+  '400':
+    description: Bad request. Invalid input data or validation failed.
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            status:
+              type: integer
+              example: 400
+            message:
+              type: string
+              example: 'Bad Request'
+            data:
+              type: object
+              # Оскільки validateBody використовує Joi, деталі помилок можуть бути різними
+              # Тут можна описати загальну структуру або посилатися на схему помилок валідації
+              example:
+                errors: # Приклад, як може виглядати масив помилок Joi
+                  - message: '"name" length must be at least 3 characters long'
+                    path: ['name']
+                    type: 'string.min'
+                    context:
+                      limit: 3
+                      value: 'Jo'
+                      label: 'name'
+                      key: 'name'
+          required:
+            - status
+            - message
+  '401':
+    $ref: ../../../components/responses/UnauthorizedError.yaml
+  '404':
+    $ref: ../../../components/responses/NotFoundError.yaml

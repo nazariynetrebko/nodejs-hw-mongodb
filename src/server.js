@@ -8,6 +8,7 @@ import { notFoundHandler } from './middlewares/notFoundHandler.js';
 import authRouter from './routers/auth.js';
 import cookieParser from 'cookie-parser';
 import { UPLOAD_DIR } from './constants/index.js';
+import { swaggerDocs } from './middlewares/swaggerDocs.js';
 
 const PORT = Number(getEnvVar('PORT', '3000'));
 
@@ -37,12 +38,12 @@ export const setupServer = () => {
     res.json({ message: 'HW2 endpoint' });
   });
 
-  app.use(notFoundHandler);
-
-  app.use(errorHandler);
+  app.use('/api-docs', swaggerDocs());
 
   app.use('/uploads', express.static(UPLOAD_DIR));
-  app.use(contactsRouter);
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+  // app.use(contactsRouter);
   return app.listen(PORT, () => {
     console.log(`Server is running on ${PORT}`);
   });

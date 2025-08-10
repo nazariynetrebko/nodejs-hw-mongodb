@@ -1,0 +1,38 @@
+post:
+  tags:
+    - Auth
+  summary: Register a new user
+  operationId: registerUser
+  description: Creates a new user account.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../components/schemas/RegisterRequest.yaml'
+  responses:
+    '201':
+      description: User registered successfully.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - status
+              - message
+              - data
+            properties:
+              status:
+                type: integer
+                example: 201
+              message:
+                type: string
+                example: Successfully registered a user!
+              data:
+                $ref: '../../components/schemas/User.yaml'
+    '400':
+      $ref: '../../components/responses/ValidationError.yaml'
+    '409':
+      $ref: '../../components/responses/ConflictError.yaml'
+    '500':
+      $ref: '../../components/responses/InternalServerError.yaml'

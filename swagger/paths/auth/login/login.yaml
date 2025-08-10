@@ -1,0 +1,58 @@
+post:
+  tags:
+    - Auth
+  summary: Log in a user
+  operationId: loginUser
+  description: Authenticates a user and returns access and refresh tokens.
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../components/schemas/LoginRequest.yaml'
+  responses:
+    '200':
+      description: User logged in successfully. Access token in response body, refresh token in HttpOnly cookie.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - status
+              - message
+              - data
+            properties:
+              status:
+                type: integer
+                example: 200
+              message:
+                type: string
+                example: Successfully logged in an user!
+              data:
+                type: object
+                required:
+                  - accessToken
+                properties:
+                  accessToken:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      headers:
+        Set-Cookie:
+          description: Refresh token cookie.
+          schema:
+            type: string
+            example: refreshToken=abc123...; Path=/; HttpOnly; Max-Age=2592000
+    '400':
+      $ref: '../../components/responses/BadRequestError.yaml'
+    '401':
+      description: Invalid credentials.
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/ErrorResponse.yaml'
+          example:
+            status: 401
+            message: Email or password is wrong
+            data: {}
+    '500':
+      $ref: '../../components/responses/InternalServerError.yaml'
